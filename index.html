@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>고객관리 시스템 (Firebase)</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Malgun Gothic', '맑은 고딕', 'Apple SD Gothic Neo', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* === 로그인/회원가입 화면 === */
+  .auth-container {
+    max-width: 420px;
+    margin: 60px auto;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .auth-header {
+    background: linear-gradient(to right, #1e3a5f, #2c5282);
+    color: #ffffff;
+    padding: 22px 28px;
+    border-bottom: 3px solid #c9a449;
+    text-align: center;
+  }
+
+  .auth-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .auth-header .subtitle {
+    font-size: 11px;
+    color: #cbd5e0;
+    margin-top: 4px;
+  }
+
+  .auth-header .badge {
+    display: inline-block;
+    background-color: rgba(201, 164, 73, 0.25);
+    color: #fde68a;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 10px;
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  .auth-tabs {
+    display: flex;
+    background-color: #f7f8fa;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 12px;
+    background-color: transparent;
+    border: none;
+    border-right: 1px solid #d1d5db;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #4a5568;
+    font-family: inherit;
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .auth-tab:last-child {
+    border-right: none;
+  }
+
+  .auth-tab.active {
+    background-color: #ffffff;
+    color: #1e3a5f;
+    font-weight: 600;
+  }
+
+  .auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #1e3a5f;
+  }
+
+  .auth-form {
+    padding: 28px;
+    display: none;
+  }
+
+  .auth-form.active {
+    display: block;
+  }
+
+  .auth-form-row {
+    margin-bottom: 14px;
+  }
+
+  .auth-form-row label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 5px;
+  }
+
+  .auth-form-row input {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid #cbd5e0;
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+
+  .auth-form-row input:focus {
+    outline: none;
+    border-color: #2c5282;
+    box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.1);
+  }
+
+  .auth-checkbox {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+    font-size: 12px;
+    color: #4a5568;
+    user-select: none;
+  }
+
+  .auth-checkbox input {
+    margin-right: 6px;
+    cursor: pointer;
+  }
+
+  .auth-checkbox label {
+    cursor: pointer;
+  }
+
+  .auth-submit {
+    width: 100%;
+    padding: 11px;
+    background-color: #1e3a5f;
+    color: #ffffff;
+    border: 1px solid #1e3a5f;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .auth-submit:hover:not(:disabled) {
+    background-color: #2c5282;
+    border-color: #2c5282;
+  }
+
+  .auth-submit:disabled {
+    background-color: #a0aec0;
+    border-color: #a0aec0;
+    cursor: not-allowed;
+  }
+
+  .auth-help {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 11px;
+    color: #718096;
+  }
+
+  /* === 메인 앱 화면 === */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+
+  .header {
+    background: linear-gradient(to right, #1e3a5f, #2c5282);
+    color: #ffffff;
+    padding: 18px 30px;
+    border-bottom: 3px solid #c9a449;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .header .subtitle {
+    font-size: 12px;
+    color: #cbd5e0;
+    margin-top: 4px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .user-info .username {
+    color: #ffffff;
+    font-weight: 500;
+  }
+
+  .user-info .username .label {
+    color: #cbd5e0;
+    font-size: 11px;
+    margin-right: 4px;
+  }
+
+  .logout-btn {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+
+  .logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: #ffffff;
+  }
+
+  .tab-nav {
+    display: flex;
+    background-color: #f7f8fa;
+    border-bottom: 1px solid #d1d5db;
+  }
+
+  .tab-button {
+    padding: 13px 28px;
+    background-color: transparent;
+    border: none;
+    border-right: 1px solid #d1d5db;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+
+  .tab-button:hover {
+    background-color: #edf0f4;
+    color: #1e3a5f;
+  }
+
+  .tab-button.active {
+    background-color: #ffffff;
+    color: #1e3a5f;
+    font-weight: 600;
+  }
+
+  .tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #1e3a5f;
+  }
+
+  .tab-content {
+    display: none;
+    padding: 30px;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e3a5f;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #1e3a5f;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title .count {
+    font-size: 12px;
+    color: #718096;
+    font-weight: 400;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0;
+    border-top: 1px solid #d1d5db;
+  }
+
+  .form-label {
+    background-color: #f7f8fa;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2d3748;
+    border-bottom: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    display: flex;
+    align-items: center;
+  }
+
+  .form-label .required {
+    color: #c53030;
+    margin-left: 4px;
+  }
+
+  .form-input-cell {
+    padding: 8px 12px;
+    border-bottom: 1px solid #d1d5db;
+    background-color: #ffffff;
+  }
+
+  .form-input-cell input {
+    width: 100%;
+    max-width: 380px;
+    padding: 7px 10px;
+    border: 1px solid #cbd5e0;
+    font-size: 13px;
+    font-family: inherit;
+    background-color: #ffffff;
+    transition: border-color 0.15s;
+  }
+
+  .form-input-cell input:focus {
+    outline: none;
+    border-color: #2c5282;
+    box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.1);
+  }
+
+  .button-group {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+
+  .btn {
+    padding: 8px 22px;
+    border: 1px solid;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-color: #1e3a5f;
+    color: #ffffff;
+    border-color: #1e3a5f;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: #2c5282;
+    border-color: #2c5282;
+  }
+
+  .btn-secondary {
+    background-color: #ffffff;
+    color: #4a5568;
+    border-color: #cbd5e0;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #f7f8fa;
+    border-color: #a0aec0;
+  }
+
+  .btn-danger {
+    background-color: #ffffff;
+    color: #c53030;
+    border-color: #fc8181;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: #fff5f5;
+    border-color: #c53030;
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: #f7f8fa;
+    border: 1px solid #d1d5db;
+  }
+
+  .search-bar input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid #cbd5e0;
+    font-size: 13px;
+    font-family: inherit;
+  }
+
+  .search-bar input:focus {
+    outline: none;
+    border-color: #2c5282;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    border: 1px solid #d1d5db;
+  }
+
+  .data-table thead {
+    background-color: #1e3a5f;
+    color: #ffffff;
+  }
+
+  .data-table th {
+    padding: 11px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+    border-right: 1px solid #2c5282;
+  }
+
+  .data-table th:last-child {
+    border-right: none;
+  }
+
+  .data-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.1s;
+  }
+
+  .data-table tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+  }
+
+  .data-table tbody tr:hover {
+    background-color: #ebf4ff;
+  }
+
+  .data-table td {
+    padding: 10px 12px;
+    color: #2d3748;
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .data-table td:last-child {
+    border-right: none;
+    text-align: center;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #a0aec0;
+    font-size: 13px;
+    background-color: #fafbfc;
+    border: 1px solid #e2e8f0;
+  }
+
+  .empty-state .icon {
+    font-size: 36px;
+    margin-bottom: 10px;
+    color: #cbd5e0;
+  }
+
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #2f855a;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 2px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+  }
+
+  .toast.show {
+    transform: translateX(0);
+  }
+
+  .toast.error {
+    background-color: #c53030;
+  }
+
+  .footer {
+    padding: 12px 30px;
+    background-color: #f7f8fa;
+    border-top: 1px solid #d1d5db;
+    font-size: 11px;
+    color: #718096;
+    text-align: center;
+  }
+
+  .id-cell {
+    color: #718096;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+  }
+
+  .loading-screen {
+    text-align: center;
+    padding: 80px 20px;
+    color: #718096;
+    font-size: 14px;
+  }
+
+  .loading-screen .spinner {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #1e3a5f;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 16px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  @media (max-width: 768px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .form-label {
+      border-right: none;
+    }
+    .data-table {
+      font-size: 12px;
+    }
+    .data-table th, .data-table td {
+      padding: 8px 6px;
+    }
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 로딩 화면 (Firebase 초기화 중) ============ -->
+<div id="loading-screen" class="auth-container">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <div>연결 중...</div>
+  </div>
+</div>
+
+<!-- ============ 로그인/회원가입 화면 ============ -->
+<div id="auth-screen" class="auth-container hidden">
+  <div class="auth-header">
+    <h1>고객관리 시스템</h1>
+    <div class="subtitle">Customer Management System</div>
+    <div class="badge">Cloud Edition</div>
+  </div>
+
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="tab-login-btn">로그인</button>
+    <button class="auth-tab" id="tab-signup-btn">회원가입</button>
+  </div>
+
+  <!-- 로그인 폼 -->
+  <form class="auth-form active" id="form-login">
+    <div class="auth-form-row">
+      <label for="login-email">이메일</label>
+      <input type="email" id="login-email" autocomplete="email" maxlength="80" required placeholder="example@email.com">
+    </div>
+    <div class="auth-form-row">
+      <label for="login-password">비밀번호</label>
+      <input type="password" id="login-password" autocomplete="current-password" maxlength="50" required>
+    </div>
+    <div class="auth-checkbox">
+      <input type="checkbox" id="login-remember" checked>
+      <label for="login-remember">로그인 상태 유지</label>
+    </div>
+    <button type="submit" class="auth-submit" id="login-submit-btn">로그인</button>
+    <div class="auth-help">계정이 없으신가요? 위의 회원가입 탭을 눌러주세요.</div>
+  </form>
+
+  <!-- 회원가입 폼 -->
+  <form class="auth-form" id="form-signup">
+    <div class="auth-form-row">
+      <label for="signup-email">이메일</label>
+      <input type="email" id="signup-email" autocomplete="email" maxlength="80" required placeholder="example@email.com">
+    </div>
+    <div class="auth-form-row">
+      <label for="signup-password">비밀번호</label>
+      <input type="password" id="signup-password" autocomplete="new-password" maxlength="50" required placeholder="6자 이상">
+    </div>
+    <div class="auth-form-row">
+      <label for="signup-password2">비밀번호 확인</label>
+      <input type="password" id="signup-password2" autocomplete="new-password" maxlength="50" required>
+    </div>
+    <button type="submit" class="auth-submit" id="signup-submit-btn" style="margin-top: 8px;">가입하기</button>
+    <div class="auth-help">이미 계정이 있으신가요? 위의 로그인 탭을 눌러주세요.</div>
+  </form>
+</div>
+
+<!-- ============ 메인 앱 화면 ============ -->
+<div id="app-screen" class="container hidden">
+  <div class="header">
+    <div>
+      <h1>고객관리 시스템</h1>
+      <div class="subtitle">Customer Management System &nbsp;·&nbsp; Cloud Edition</div>
+    </div>
+    <div class="user-info">
+      <span class="username"><span class="label">사용자</span><span id="current-username"></span></span>
+      <button class="logout-btn" id="logout-btn">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-button active" data-tab="new">신규입력</button>
+    <button class="tab-button" data-tab="list">고객목록</button>
+  </div>
+
+  <!-- 신규입력 탭 -->
+  <div id="tab-new" class="tab-content active">
+    <div class="section-title">
+      <span>신규 고객 정보 입력</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-label">이름<span class="required">*</span></div>
+      <div class="form-input-cell">
+        <input type="text" id="input-name" placeholder="고객명을 입력하세요" maxlength="30">
+      </div>
+
+      <div class="form-label">전화번호<span class="required">*</span></div>
+      <div class="form-input-cell">
+        <input type="tel" id="input-phone" placeholder="010-0000-0000" maxlength="20">
+      </div>
+
+      <div class="form-label">E-mail</div>
+      <div class="form-input-cell">
+        <input type="email" id="input-email" placeholder="example@email.com" maxlength="50">
+      </div>
+
+      <div class="form-label">최근방문날짜</div>
+      <div class="form-input-cell">
+        <input type="date" id="input-visit">
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="btn btn-secondary" id="reset-form-btn">초기화</button>
+      <button class="btn btn-primary" id="save-customer-btn">등록</button>
+    </div>
+  </div>
+
+  <!-- 고객목록 탭 -->
+  <div id="tab-list" class="tab-content">
+    <div class="section-title">
+      <span>고객 목록</span>
+      <span class="count" id="customer-count">총 0명</span>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="이름 또는 전화번호로 검색...">
+      <button class="btn btn-secondary" id="export-csv-btn">CSV 내보내기</button>
+      <button class="btn btn-danger" style="padding: 7px 14px; font-size: 13px;" id="reset-all-btn">전체 초기화</button>
+    </div>
+
+    <div id="list-container">
+      <div class="loading-screen">
+        <div class="spinner"></div>
+        <div>데이터 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Customer Management System v3.0 (Firebase) &nbsp;|&nbsp; 데이터는 클라우드에 안전하게 저장됩니다
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script type="module">
+  // ============ Firebase SDK 임포트 ============
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
+  import {
+    getAuth,
+    setPersistence,
+    browserLocalPersistence,
+    browserSessionPersistence,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js';
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    deleteDoc,
+    doc,
+    query,
+    where,
+    orderBy,
+    serverTimestamp,
+    writeBatch
+  } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js';
+
+  // ============ Firebase 설정 ============
+  const firebaseConfig = {
+    apiKey: "AIzaSyAQPV_WatpbjJmvZO6QNDZswth3qkw4Rm0",
+    authDomain: "customer-firebase-3024f.firebaseapp.com",
+    projectId: "customer-firebase-3024f",
+    storageBucket: "customer-firebase-3024f.firebasestorage.app",
+    messagingSenderId: "1004072188864",
+    appId: "1:1004072188864:web:230234fb27d35a32006625"
+  };
+
+  // ============ Firebase 초기화 ============
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // 캐시
+  let currentUser = null;
+  let customersCache = [];
+
+  // ============ 화면 전환 ============
+  function showLoading() {
+    document.getElementById('loading-screen').classList.remove('hidden');
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.add('hidden');
+  }
+
+  function showAuthScreen() {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.remove('hidden');
+    document.getElementById('app-screen').classList.add('hidden');
+  }
+
+  function showAppScreen() {
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('auth-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    document.getElementById('current-username').textContent = currentUser.email;
+    switchTab('new');
+    loadCustomers();
+  }
+
+  function switchAuthTab(tab) {
+    document.getElementById('tab-login-btn').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-signup-btn').classList.toggle('active', tab === 'signup');
+    document.getElementById('form-login').classList.toggle('active', tab === 'login');
+    document.getElementById('form-signup').classList.toggle('active', tab === 'signup');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+    if (tab === 'new') {
+      document.querySelector('.tab-button[data-tab="new"]').classList.add('active');
+      document.getElementById('tab-new').classList.add('active');
+    } else {
+      document.querySelector('.tab-button[data-tab="list"]').classList.add('active');
+      document.getElementById('tab-list').classList.add('active');
+      renderList();
+    }
+  }
+
+  // ============ 토스트 ============
+  function showToast(message, isError) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast show' + (isError ? ' error' : '');
+    setTimeout(() => {
+      toast.className = 'toast' + (isError ? ' error' : '');
+    }, 2800);
+  }
+
+  // ============ Firebase 에러 메시지 한글화 ============
+  function translateAuthError(code) {
+    const map = {
+      'auth/email-already-in-use': '이미 가입된 이메일입니다.',
+      'auth/invalid-email': '이메일 형식이 올바르지 않습니다.',
+      'auth/weak-password': '비밀번호는 6자 이상이어야 합니다.',
+      'auth/user-not-found': '등록되지 않은 이메일입니다.',
+      'auth/wrong-password': '비밀번호가 일치하지 않습니다.',
+      'auth/invalid-credential': '이메일 또는 비밀번호가 올바르지 않습니다.',
+      'auth/too-many-requests': '너무 많은 시도가 있었습니다. 잠시 후 다시 시도해주세요.',
+      'auth/network-request-failed': '네트워크 연결을 확인해주세요.',
+      'auth/missing-password': '비밀번호를 입력해주세요.'
+    };
+    return map[code] || ('오류가 발생했습니다: ' + code);
+  }
+
+  // ============ 회원가입 ============
+  async function handleSignup(event) {
+    event.preventDefault();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const password2 = document.getElementById('signup-password2').value;
+
+    if (password.length < 6) {
+      showToast('비밀번호는 6자 이상이어야 합니다.', true);
+      return;
+    }
+    if (password !== password2) {
+      showToast('비밀번호 확인이 일치하지 않습니다.', true);
+      return;
+    }
+
+    const submitBtn = document.getElementById('signup-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '가입 중...';
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      showToast('회원가입이 완료되었습니다. 로그인되었습니다.');
+      document.getElementById('form-signup').reset();
+      // onAuthStateChanged가 자동으로 앱 화면으로 전환
+    } catch (error) {
+      showToast(translateAuthError(error.code), true);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '가입하기';
+    }
+  }
+
+  // ============ 로그인 ============
+  async function handleLogin(event) {
+    event.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const remember = document.getElementById('login-remember').checked;
+
+    const submitBtn = document.getElementById('login-submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '로그인 중...';
+
+    try {
+      await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+      await signInWithEmailAndPassword(auth, email, password);
+      document.getElementById('form-login').reset();
+      // onAuthStateChanged가 자동으로 앱 화면으로 전환
+    } catch (error) {
+      showToast(translateAuthError(error.code), true);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '로그인';
+    }
+  }
+
+  // ============ 로그아웃 ============
+  async function handleLogout() {
+    if (!confirm('로그아웃 하시겠습니까?')) return;
+    try {
+      await signOut(auth);
+      showToast('로그아웃되었습니다.');
+    } catch (error) {
+      showToast('로그아웃 중 오류가 발생했습니다.', true);
+    }
+  }
+
+  // ============ 고객 데이터 (Firestore) ============
+  async function loadCustomers() {
+    if (!currentUser) return;
+    try {
+      const q = query(
+        collection(db, 'customers'),
+        where('uid', '==', currentUser.uid)
+      );
+      const snapshot = await getDocs(q);
+      customersCache = [];
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        customersCache.push({
+          id: docSnap.id,
+          name: data.name,
+          phone: data.phone,
+          email: data.email || '-',
+          visit: data.visit || '-',
+          created: data.created || '-',
+          createdAt: data.createdAt
+        });
+      });
+      // 클라이언트에서 정렬 (최신 등록 순)
+      customersCache.sort((a, b) => {
+        const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return tb - ta;
+      });
+      renderList();
+    } catch (error) {
+      console.error('데이터 로드 오류:', error);
+      showToast('데이터를 불러오는 중 오류가 발생했습니다.', true);
+    }
+  }
+
+  async function saveCustomer() {
+    const name = document.getElementById('input-name').value.trim();
+    const phone = document.getElementById('input-phone').value.trim();
+    const email = document.getElementById('input-email').value.trim();
+    const visit = document.getElementById('input-visit').value;
+
+    if (!name) {
+      showToast('이름을 입력해주세요.', true);
+      document.getElementById('input-name').focus();
+      return;
+    }
+    if (!phone) {
+      showToast('전화번호를 입력해주세요.', true);
+      document.getElementById('input-phone').focus();
+      return;
+    }
+
+    const saveBtn = document.getElementById('save-customer-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '저장 중...';
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await addDoc(collection(db, 'customers'), {
+        uid: currentUser.uid,
+        name: name,
+        phone: phone,
+        email: email || '-',
+        visit: visit || '-',
+        created: today,
+        createdAt: serverTimestamp()
+      });
+      showToast('고객 정보가 등록되었습니다.');
+      resetForm();
+      document.getElementById('input-name').focus();
+      await loadCustomers();
+    } catch (error) {
+      console.error('저장 오류:', error);
+      showToast('저장 중 오류가 발생했습니다. 권한 또는 네트워크를 확인해주세요.', true);
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '등록';
+    }
+  }
+
+  async function deleteCustomer(id) {
+    if (!confirm('이 고객 정보를 삭제하시겠습니까?')) return;
+    try {
+      await deleteDoc(doc(db, 'customers', id));
+      showToast('삭제되었습니다.');
+      await loadCustomers();
+    } catch (error) {
+      console.error('삭제 오류:', error);
+      showToast('삭제 중 오류가 발생했습니다.', true);
+    }
+  }
+
+  async function resetAllData() {
+    if (customersCache.length === 0) {
+      showToast('초기화할 데이터가 없습니다.', true);
+      return;
+    }
+    if (!confirm(`내 고객 정보(${customersCache.length}건)를 모두 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+    if (!confirm('정말 삭제하시겠습니까? 마지막 확인입니다.')) return;
+
+    try {
+      // 배치 삭제
+      const batch = writeBatch(db);
+      customersCache.forEach(c => {
+        batch.delete(doc(db, 'customers', c.id));
+      });
+      await batch.commit();
+      showToast('내 데이터가 초기화되었습니다.');
+      await loadCustomers();
+    } catch (error) {
+      console.error('초기화 오류:', error);
+      showToast('초기화 중 오류가 발생했습니다.', true);
+    }
+  }
+
+  // ============ 폼/렌더 ============
+  function resetForm() {
+    document.getElementById('input-name').value = '';
+    document.getElementById('input-phone').value = '';
+    document.getElementById('input-email').value = '';
+    document.getElementById('input-visit').value = '';
+  }
+
+  function renderList() {
+    const search = document.getElementById('search-input').value.trim().toLowerCase();
+    const filtered = search
+      ? customersCache.filter(c =>
+          c.name.toLowerCase().includes(search) ||
+          c.phone.toLowerCase().includes(search))
+      : customersCache;
+
+    document.getElementById('customer-count').textContent = `총 ${filtered.length}명`;
+
+    const container = document.getElementById('list-container');
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">[ 빈 목록 ]</div>
+          <div>${customersCache.length === 0 ? '등록된 고객이 없습니다. 신규입력 탭에서 고객을 등록하세요.' : '검색 결과가 없습니다.'}</div>
+        </div>`;
+      return;
+    }
+
+    let html = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">No.</th>
+            <th style="width: 120px;">이름</th>
+            <th style="width: 150px;">전화번호</th>
+            <th>E-mail</th>
+            <th style="width: 130px;">최근방문날짜</th>
+            <th style="width: 130px;">등록일</th>
+            <th style="width: 80px;">관리</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    filtered.forEach((c, i) => {
+      html += `
+        <tr>
+          <td class="id-cell">${String(i + 1).padStart(3, '0')}</td>
+          <td><strong>${escapeHtml(c.name)}</strong></td>
+          <td>${escapeHtml(c.phone)}</td>
+          <td>${escapeHtml(c.email)}</td>
+          <td>${escapeHtml(c.visit)}</td>
+          <td>${escapeHtml(c.created)}</td>
+          <td><button class="btn btn-danger" data-delete-id="${c.id}">삭제</button></td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+
+    // 삭제 버튼 이벤트 바인딩
+    container.querySelectorAll('[data-delete-id]').forEach(btn => {
+      btn.addEventListener('click', () => deleteCustomer(btn.dataset.deleteId));
+    });
+  }
+
+  function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+  }
+
+  // ============ CSV 내보내기 ============
+  function exportCSV() {
+    if (customersCache.length === 0) {
+      showToast('내보낼 데이터가 없습니다.', true);
+      return;
+    }
+
+    let csv = '﻿번호,이름,전화번호,E-mail,최근방문날짜,등록일\n';
+    customersCache.forEach((c, i) => {
+      csv += `${i + 1},"${c.name}","${c.phone}","${c.email}","${c.visit}","${c.created}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    const safeEmail = (currentUser?.email || 'guest').replace('@', '_').replace(/\./g, '_');
+    a.href = url;
+    a.download = `${safeEmail}_고객목록_${today}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV 파일이 다운로드되었습니다.');
+  }
+
+  // ============ 전화번호 자동 하이픈 ============
+  function formatPhoneNumber(value) {
+    const digits = value.replace(/[^0-9]/g, '');
+    if (digits.length === 0) return '';
+    if (digits.startsWith('02')) {
+      if (digits.length <= 2) return digits;
+      if (digits.length <= 5) return digits.slice(0, 2) + '-' + digits.slice(2);
+      if (digits.length <= 9) return digits.slice(0, 2) + '-' + digits.slice(2, 5) + '-' + digits.slice(5);
+      return digits.slice(0, 2) + '-' + digits.slice(2, 6) + '-' + digits.slice(6, 10);
+    }
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return digits.slice(0, 3) + '-' + digits.slice(3);
+    if (digits.length <= 10) return digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+    return digits.slice(0, 3) + '-' + digits.slice(3, 7) + '-' + digits.slice(7, 11);
+  }
+
+  // ============ 인증 상태 변화 감지 ============
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      showAppScreen();
+    } else {
+      currentUser = null;
+      customersCache = [];
+      showAuthScreen();
+      setTimeout(() => {
+        const emailInput = document.getElementById('login-email');
+        if (emailInput) emailInput.focus();
+      }, 100);
+    }
+  });
+
+  // ============ 이벤트 바인딩 ============
+  document.addEventListener('DOMContentLoaded', () => {
+    // 인증 화면
+    document.getElementById('tab-login-btn').addEventListener('click', () => switchAuthTab('login'));
+    document.getElementById('tab-signup-btn').addEventListener('click', () => switchAuthTab('signup'));
+    document.getElementById('form-login').addEventListener('submit', handleLogin);
+    document.getElementById('form-signup').addEventListener('submit', handleSignup);
+
+    // 메인 앱
+    document.getElementById('logout-btn').addEventListener('click', handleLogout);
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    document.getElementById('save-customer-btn').addEventListener('click', saveCustomer);
+    document.getElementById('reset-form-btn').addEventListener('click', resetForm);
+    document.getElementById('export-csv-btn').addEventListener('click', exportCSV);
+    document.getElementById('reset-all-btn').addEventListener('click', resetAllData);
+    document.getElementById('search-input').addEventListener('keyup', renderList);
+
+    // 전화번호 자동 포맷
+    document.getElementById('input-phone').addEventListener('input', (e) => {
+      e.target.value = formatPhoneNumber(e.target.value);
+    });
+
+    // Enter로 등록
+    document.getElementById('input-visit').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') saveCustomer();
+    });
+  });
+</script>
+
+</body>
+</html>
